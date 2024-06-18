@@ -77,12 +77,14 @@ Dockerfile (run tests)
 ---
 ## Structure
 
-Backend
+### [Backend](backend)
 - `server.py` contains the Flask application
 - `test_server.py` contains the pytest for the Flask application
-- [Schemas](backend/schemas)
-  - Contains schemas for Receipts and Items, stored in `schemas/receipt.py` and `schemas/item.py` respectively
-Examples
+
+### [Schemas](backend/schemas)
+- Contains schemas for Receipts and Items, stored in `receipt.py` and `item.py` respectively
+
+### [Examples](examples)
 - Contains 4 JSON files representing examples to be used in `test_server.py`
 
 ---
