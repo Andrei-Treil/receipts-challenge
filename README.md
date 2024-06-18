@@ -1,31 +1,131 @@
 # Receipt Processor
 
-Build a webservice that fulfils the documented API. The API is described below. A formal definition is provided 
-in the [api.yml](./api.yml) file, but the information in this README is sufficient for completion of this challenge. We will use the 
-described API to test your solution.
+This repository contains my solution to the [Fetch Rewards Receipt Processor Challenge](https://github.com/fetch-rewards/receipt-processor-challenge). This project is written in Python 3.12.3, and implements the specified API using a Flask server. For instructions on running the code, see below.
 
-Provide any instructions required to run your application.
+## Running the code
 
-Data does not need to persist when your application stops. It is sufficient to store information in memory. There are too many different database solutions, we will not be installing a database on our system when testing your application.
+To run this code, clone this repository and enter the root directory:
+`cd receipts-challenge`
 
-## Language Selection
+Start the application by running:
+`docker compose up --build`.
 
-You can assume our engineers have Go and Docker installed to run your application. Go is our preferred language, but it is not a requirement for this exercise.
+Once the application is running, you can make request to the Flask server on [localhost:8000](http://localhost:8000)
 
-If you are using a language other than Go, the engineer evaluating your submission may not have an environment ready for your language. Your instructions should include how to get an environment in any OS that can run your project. For example, if you write your project in Javascript simply stating to "run `npm start` to start the application" is not sufficient, because the engineer may not have NPM. Providing a docker file and the required docker command is a simple way to satisfy this requirement.
+Using CURL:
+```
+curl --location 'http://127.0.0.1:8000/receipts/process' \
+--header 'Content-Type: application/json' \
+--data '{
+  "retailer": "Target",
+  "purchaseDate": "2022-01-01",
+  "purchaseTime": "13:01",
+  "items": [
+    {
+      "shortDescription": "Mountain Dew 12PK",
+      "price": "6.49"
+    },{
+      "shortDescription": "Emils Cheese Pizza",
+      "price": "12.25"
+    },{
+      "shortDescription": "Knorr Creamy Chicken",
+      "price": "1.26"
+    },{
+      "shortDescription": "Doritos Nacho Cheese",
+      "price": "3.35"
+    },{
+      "shortDescription": "   Klarbrunn 12-PK 12 FL OZ  ",
+      "price": "12.00"
+    }
+  ],
+  "total": "35.35"
+}'
+```
+Output:
+```json
+{"id":"306a07b5-1132-4fbe-b0da-1db70f0582dc"}
+```
 
-## Submitting Your Solution
+Using Postman:
+![image](https://github.com/Andrei-Treil/receipts-challenge/assets/80796927/9ed83f11-af32-4ed5-a4db-651355f7285e)
 
-Provide a link to a public repository, such as GitHub or BitBucket, that contains your code to the provided link through Greenhouse.
+Output:
+![image](https://github.com/Andrei-Treil/receipts-challenge/assets/80796927/269f7480-2485-4614-a4c0-d38e3f0bee2b)
+
+
+
+### Running tests
+I have included a simple test in [test_server.py](/backend/test_server.py), to run these tests in Docker, go to the [Dockerfile](Dockerfile) and uncomment line 51 and comment out line 54:
+```
+Dockerfile (run server)
+...
+50 # NOTE: To run tests in Docker, uncomment line 51 and comment out line 54
+51 # CMD pytest -v backend/test_server.py
+52
+53 # Run the application.
+54 CMD python backend/server.py
+```
+```
+Dockerfile (run tests)
+...
+50 # NOTE: To run tests in Docker, uncomment line 51 and comment out line 54
+51 CMD pytest -v backend/test_server.py
+52
+53 # Run the application.
+54 # CMD python backend/server.py
+```
+---
+## Structure
+
+Backend
+- `server.py` contains the Flask application
+- `test_server.py` contains the pytest for the Flask application
+- [Schemas](backend/schemas)
+  - Contains schemas for Receipts and Items, stored in `schemas/receipt.py` and `schemas/item.py` respectively
+Examples
+- Contains 4 JSON files representing examples to be used in `test_server.py`
 
 ---
+
 ## Summary of API Specification
 
 ### Endpoint: Process Receipts
 
 * Path: `/receipts/process`
 * Method: `POST`
-* Payload: Receipt JSON
+* Payload: Receipt JSON following below specification
+  
+  ```
+  retailer:
+      description: The name of the retailer or store the receipt is from.
+      type: string
+      pattern: "^[\\w\\s\\-&]+$"
+      example: "M&M Corner Market"
+  
+  purchaseDate:
+      description: The date of the purchase printed on the receipt.
+      type: string
+      format: date
+      example: "2022-01-01"
+  
+  purchaseTime:
+      description: The time of the purchase printed on the receipt. 24-hour time expected.
+      type: string
+      format: time
+      example: "13:01"
+  
+  items:
+      type: array
+            minItems: 1
+            items:
+                $ref: "#/components/schemas/Item"
+  
+  total:
+      description: The total amount paid on the receipt.
+      type: string
+      pattern: "^\\d+\\.\\d{2}$"
+      example: "6.49"
+  ```
 * Response: JSON containing an id for the receipt.
 
 Description:
